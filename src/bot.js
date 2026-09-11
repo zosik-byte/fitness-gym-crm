@@ -1,11 +1,14 @@
 // ============================================================
 //  FITNESS & GYM CRM — Telegram Bot (Telegraf)
-//  Команда /start, Menu Button, inline-кнопка Mini App
+//  Команда /start с баннером, Menu Button, inline-кнопка Mini App
 // ============================================================
 
 const { Telegraf, Markup } = require('telegraf');
 
 let botInstance = null;
+
+// File ID баннера (получен из Telegram)
+const BANNER_FILE_ID = 'AgACAgIAAxkBAAEier9qo4Y_5g1Q9ebR7R7sDf_1wrIedwACVyVrG37NGUn8vy-Ls1nqoQEAAwIAA3kAAz0E';
 
 // ------------------------------------------------------------
 // Запуск бота
@@ -23,7 +26,7 @@ function startBot() {
   botInstance = bot;
 
   // ----------------------------------------------------------
-  // /start — приветствие + inline-кнопка Mini App
+  // /start — баннер + приветствие + inline-кнопка Mini App
   // ----------------------------------------------------------
   bot.start(async (ctx) => {
     const name = ctx.from?.first_name || 'друг';
@@ -34,16 +37,26 @@ function startBot() {
         ])
       : undefined;
 
-    await ctx.reply(
+    const caption =
       `Привет, ${name}! 👋\n\n` +
       `Это CRM-помощник фитнес-клуба *FITNESS & GYM*.\n\n` +
       `Здесь вы можете:\n` +
       `• 👥 Управлять клиентами и абонементами\n` +
       `• 💰 Работать с депозитами\n` +
       `• 🍷 Продавать товары из бара\n` +
-      `• 📊 Смотреть аналитику выручки`,
-      { parse_mode: 'Markdown', ...keyboard }
-    );
+      `• 📊 Смотреть аналитику выручки`;
+
+    try {
+      await ctx.replyWithPhoto(BANNER_FILE_ID, {
+        caption,
+        parse_mode: 'Markdown',
+        ...keyboard,
+      });
+    } catch (e) {
+      // Если картинка почему-то не работает — отправим просто текст
+      console.warn('[BOT]   replyWithPhoto failed, using reply:', e.message);
+      await ctx.reply(caption, { parse_mode: 'Markdown', ...keyboard });
+    }
 
     // Устанавливаем Menu Button для этого чата
     if (WEBAPP_URL) {
